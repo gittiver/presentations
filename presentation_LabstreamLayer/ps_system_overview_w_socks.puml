@@ -1,0 +1,81 @@
+@startuml
+
+title Overview System Data Flow 
+
+left to right direction
+
+actor eeg_signal as " EEG signals"
+actor fnirs_signal as "fNIRS signals"
+actor fotosensor
+actor vibrating_socks
+
+
+node ad as "A/D Wandler\n (Schmitt-Trigger + Poti)"
+
+cloud lsl_net as "LSL WLAN\n (Pi in access point mode)" {
+node eeg {
+component eeg_lsl as "lsl"
+}
+node fnirs{
+component fnirs_lsl as "lsl"
+}
+
+node laptop1 {
+component lsl_recorder as "LabStreamRecorder"
+}
+
+node rpi as "Raspberry Pi" {
+     component lsl
+     component gpio as "pigpio"
+     component app
+     gpio-->app
+     app-->lsl
+}
+
+node bt_laptop {
+
+component ble as "BLE"
+component bt_lsl as "lsl" 
+component socks_app as "app"
+}  
+ble-->socks_app
+socks_app-->bt_lsl
+}
+
+file eeg_fnirs_xdf
+
+
+'eeg_signal-[hidden]-fnirs_signal
+'fnirs_signal-[hidden]-fotosensor
+
+eeg_signal----->eeg
+fnirs_signal----->fnirs
+fotosensor-->ad: analog
+ad-->gpio: digital
+lsl-->lsl_recorder: lsl
+eeg_lsl-->lsl_recorder:  lsl
+fnirs_lsl-->lsl_recorder: lsl
+bt_lsl-->lsl_recorder
+lsl_recorder-->eeg_fnirs_xdf
+
+vibrating_socks---->ble: vibration_data, acceleration
+
+note right of eeg_fnirs_xdf
+**data in xdf format**
+eeg data
+fnirs data
+containing fotosensor_start_stop
+containing fotosensor_tuer
+end note 
+
+legend top left
+
+__Legende__
+
+analog = analoges Signal
+digital = digitales signal
+lsl = Signal tranportiert über LabStreamLayer 
+
+endlegend
+
+@enduml

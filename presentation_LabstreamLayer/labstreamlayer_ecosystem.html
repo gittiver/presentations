@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Collecting time-synchronized measurements - the LabstreamLayer ecosystem</title>
+<meta name="author" content="Frank Landgraf"/>
+<meta name="description" content=""/>
+<meta name="keywords" content=""/>
+<style type="text/css">
+.underline { text-decoration: underline; }
+</style>
+<link rel="stylesheet" href="reveal.js-5.1.0/dist/reveal.css"/>
+
+<link rel="stylesheet" href="reveal.js-5.1.0/dist/theme/solarized.css" id="theme"/>
+
+<link rel="stylesheet" href="custom.css"/>
+<link rel="stylesheet" href="reveal.js-5.1.0/plugin/highlight/zenburn.css"/></head>
+<body>
+<div class="reveal">
+<div class="slides">
+<section id="sec-title-slide"><h1 class="title">Collecting time-synchronized measurements - the LabstreamLayer ecosystem</h1><p class="subtitle"></p>
+<h2 class="author">Frank Landgraf</h2><p class="date">Created: 2025-03-06 Thu 09:24</p>
+</section>
+<section>
+<section id="slide-org4635aa2" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h2 id="org4635aa2"><span class="section-number-2">1.</span> Table of Contents</h2>
+<ul>
+<li><a href="#/slide-org412a012">whoami</a></li>
+<li><a href="#/slide-org8dfc3f0">What are we doing at the university</a></li>
+<li><a href="#/slide-org110c4ae">Labstreaming layer</a></li>
+<li><a href="#/slide-org734dc2a">Dive into the API</a></li>
+<li><a href="#/slide-orgb822213">Demo</a></li>
+<li><a href="#/slide-org345a4c1">xdf - recording data</a></li>
+<li><a href="#/slide-orgb3754c7">Questions</a></li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org412a012" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h2 id="org412a012"><span class="section-number-2">2.</span> whoami</h2>
+<p>
+Frank Landgraf
+</p>
+
+<ul>
+<li>20 years freelancing
+mostly embedded systems software development</li>
+<li>four years ago I was one of the co-founders of <a href="https://wtf.coop">https://wtf.coop</a></li>
+<li>currently working for the university of Münster as system engineer 
+at the Department for Neuromotorics and Training</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org8dfc3f0" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h2 id="org8dfc3f0"><span class="section-number-2">3.</span> What are we doing at the university</h2>
+<ul>
+<li>main project: Evaluation of tactile feedback against "Freeze of Gait"
+caused by Parkinsons Desease</li>
+
+</ul>
+
+<p>
+First Results:
+Synchronization of Neurophysiological and Biomechanical Data
+in a Real-Time Virtual Gait Analysis System (GRAIL): A Proof-of-Principle Study
+<a href="https://www.mdpi.com/1424-8220/24/12/3779">https://www.mdpi.com/1424-8220/24/12/3779</a>
+</p>
+</section>
+</section>
+<section>
+<section id="slide-orgd7f7656" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="orgd7f7656"><span class="section-number-3">3.1.</span> Synchronisation of EEG and fNIRS Data</h3>
+<ul>
+<li>EEG - electro encephalograpy</li>
+<li>fNIRS - functional near infrared spectroscopy</li>
+
+</ul>
+
+<div id="org436e869" class="figure">
+<p><img src="./sensors-24-03779-g003.png" alt="sensors-24-03779-g003.png" width="270px" />
+</p>
+</div>
+
+<ul>
+<li>different closed source software for each of them</li>
+<li>but: LabstreamLayer data streaming supported by both</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgc5c746b" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="orgc5c746b"><span class="section-number-3">3.2.</span> Synchronisation also with stimulus (visual or tactile)</h3>
+<ul>
+<li>unknown delay produced by Virtual Reality System</li>
+
+</ul>
+
+<div id="orgc9dff04" class="figure">
+<p><img src="./sensors-24-03779-g001.webp" alt="sensors-24-03779-g001.webp" />
+</p>
+</div>
+<ul>
+<li>measured by a photo diode and a projected small or white cube</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org33e8752" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org33e8752"><span class="section-number-3">3.3.</span> Problems</h3>
+<ul>
+<li>measurements run on different systems</li>
+<li>they store in proprietary formats</li>
+<li>how to get the additional signal for photo diode in a synchronous way?</li>
+<li>how do we get the state of the tactile signal (small vibration motor)
+synchronous</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org23ca58f" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org23ca58f"><span class="section-number-3">3.4.</span> Solution</h3>
+
+<div id="org27fd70e" class="figure">
+<p><img src="./ps_system_overview_w_socks.png" alt="ps_system_overview_w_socks.png" />
+</p>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-org0da3102" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org0da3102"><span class="section-number-3">3.5.</span> Layered Architecture - the labstream layer</h3>
+
+<div id="org65be7da" class="figure">
+<p><img src="./lsl_middleware.png" alt="lsl_middleware.png" width="25%" height="25%" />
+</p>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-org110c4ae" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h2 id="org110c4ae"><span class="section-number-2">4.</span> Labstreaming layer</h2>
+<p>
+LSL is an open-source networked middleware ecosystem to stream,
+receive, synchronize, and record neural, physiological,
+and behavioral data streams acquired from diverse sensor hardware.
+</p>
+
+<p>
+<a href="https://labstreaminglayer.org/">https://labstreaminglayer.org/</a>
+<a href="https://labstreaminglayer.readthedocs.io/">https://labstreaminglayer.readthedocs.io/</a>
+<a href="https://labstreaminglayer.readthedocs.io/info/supported_devices.html">https://labstreaminglayer.readthedocs.io/info/supported_devices.html</a>
+</p>
+</section>
+</section>
+<section>
+<section id="slide-orgbcf4e66" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="orgbcf4e66"><span class="section-number-3">4.1.</span> When to use</h3>
+<ul>
+<li>Fusion of Sensor data from different devices</li>
+<li>mobile devices - stream data over wireless network
+or from BLE devices</li>
+<li>if you need an easily extendable, modular integration layer <br />
+for diverse sensor data</li>
+<li>measurement of biosignals and behaviour in <br />
+VR environments (-&gt;Unity Integration)</li>
+<li>when different languages are used for data aquisition <br />
+language bindings: C/C++, python, C#, Java, Android, Unity, rust</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-orgd935fa8" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="orgd935fa8"><span class="section-number-3">4.2.</span> Serialisation and Networking</h3>
+<ul>
+<li>all serialisation is done by the middleware</li>
+<li>publisher subscriber mechanism possible through multicast</li>
+
+</ul>
+
+<p>
+UDP broadcasts to port 16571 and/or
+UDP multicast to port 16571 at
+224.0.0.1, 224.0.0.183, 239.255.172.215
+TCP and UDP connections to the ports 16572-16604
+</p>
+</section>
+</section>
+<section>
+<section id="slide-org1f20675" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org1f20675"><span class="section-number-3">4.3.</span> Time-Synchronisation</h3>
+<ul>
+<li>works similar to NTP or PTP but store the raw timestamps from the source
+and measured clock offsets</li>
+
+</ul>
+
+<p>
+<a href="https://labstreaminglayer.readthedocs.io/info/time_synchronization.html">https://labstreaminglayer.readthedocs.io/info/time_synchronization.html</a>
+</p>
+</section>
+</section>
+<section>
+<section id="slide-org07874a8" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org07874a8"><span class="section-number-3">4.4.</span> Main  Repos</h3>
+<p>
+<span class="underline"><span class="underline">Core Library</span></span>
+</p>
+
+<p>
+<a href="https://github.com/sccn/liblsl">https://github.com/sccn/liblsl</a>
+</p>
+
+<p>
+<span class="underline"><span class="underline">Collection of Core Library, language bindings and applications as submodules</span></span>
+</p>
+
+<p>
+<a href="https://github.com/sccn/labstreaminglayer">https://github.com/sccn/labstreaminglayer</a>
+</p>
+</section>
+</section>
+<section>
+<section id="slide-org734dc2a" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h2 id="org734dc2a"><span class="section-number-2">5.</span> Dive into the API</h2>
+<p>
+C++ (liblsl) vs Python(pylsl + liblsl)
+</p>
+</section>
+</section>
+<section>
+<section id="slide-orga3b184e" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="orga3b184e"><span class="section-number-3">5.1.</span> Terms and Definitions</h3>
+<p>
+<b><b>Sample</b></b>
+  single measurement from all channels of a device
+</p>
+
+<p>
+<b><b>Chunk</b></b>
+  a sample can be transferred alone or for better latency
+  in chunks of multiple samples
+</p>
+
+</section>
+<section id="slide-orga3b184e-split" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+
+<p>
+<b><b>Stream</b></b>
+  sampled data (timestamp and samples channel values) + metadata
+</p>
+<ul>
+<li>name</li>
+<li>content_type: numeric or string - all channels have to be of the same type</li>
+<li>sampling rate: regular (i.e. 44100 Hz for Audio/ irregular)</li>
+<li>channel data type (double,f float, integral, string)</li>
+<li>unique id</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org7c8507c" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org7c8507c"><span class="section-number-3">5.2.</span> Stream Outlet - pushing measurement data</h3>
+<p>
+<b><b>Stream Outlet</b></b>
+  make streams available to the network
+</p>
+
+</section>
+<section id="slide-org7c8507c-split" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+
+<p>
+<span class="underline"><span class="underline">Stream Header and Outlet</span></span>
+</p>
+
+<div style="display: grid; grid-template-columns: auto auto auto;">
+
+<div class="org-src-container">
+
+<pre   ><code class="c++" >
+// make a new stream_info (100 Hz)
+lsl::stream_info info(name,
+                      type,
+                      n_channels,
+                      samplingrate,
+                      lsl::cf_float32,
+                      std::string(name) += type);
+
+// add some description fields
+info.desc().append_child_value("manufacturer", "LSL");
+lsl::xml_element chns = info.desc().append_child("channels");
+for (int k = 0; k &lt; n_channels; k++)
+  chns.append_child("channel")
+    .append_child_value("label",
+                        k &lt; 2
+                        ? channels[k]
+                        : "Chan-" + std::to_string(k + 1))
+    .append_child_value("unit", "microvolts")
+    .append_child_value("type", type);
+// make stream outlet
+lsl::stream_outlet outlet(info, 0, max_buffered);
+</code></pre>
+</div>
+
+<div>
+
+<div class="org-src-container">
+
+<pre   ><code class="python" >hrv_stream = StreamInfo("Heart Rate variability", #name
+                             "", # content type
+                             4 , # four channels 
+                             75.0, #sample rate
+                             cf_int32, # channel data type
+                             'healthypi_heart_rate_variability' #id
+                        )
+stream_add_channel_metadata(hrv_stream,['meanval',
+                                        'sdnn',
+                                        'pnn',
+                                        'rmsd'
+                                        ],unit='digits?', type='TBD value')
+hrv_stream_outlet  = StreamOutlet(hrv_stream, 32, 360)
+
+</code></pre>
+</div>
+
+</div>
+</div>
+
+</section>
+<section id="slide-org7c8507c-split" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+
+<p>
+<span class="underline"><span class="underline">Push Samples</span></span>
+</p>
+
+<div style="display: grid; grid-template-columns: auto auto auto;">
+
+<div class="org-src-container">
+
+<pre   ><code class="c++" >
+// variable for the data sample
+float sample[1]={};
+
+// ...
+while(...) {
+  // write modified sample values i.e.
+  sample[0] = (float)((rand() % 1500) / 500.0 - 1.5);
+  // wait (alternatively everything exept wait
+  // could be in a timer handler)
+  std::this_thread::sleep_until(next_sample_time);
+  // send the sample
+  outlet.push_sample(sample);
+}
+</code></pre>
+</div>
+
+<div>
+
+<div class="org-src-container">
+
+<pre   ><code class="python" ># called in a callback or in a loop
+hrv_stream_outlet.push_sample([meanval, sdnn, pnn, rmsd],
+                              timestamp)
+</code></pre>
+</div>
+
+</div>
+</div>
+
+</section>
+<section id="slide-org7c8507c-split" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+
+<div class="org-src-container">
+
+<pre   ><code class="c++" >template &lt;class T, int32_t N&gt;
+void push_sample(const T data[N],
+                   double timestamp = 0.0,
+                   bool pushthrough = true);
+
+template &lt;class T&gt;
+void push_sample(const std::vector&lt;T&gt; &amp;data,
+                   double timestamp = 0.0,
+                   bool pushthrough = true);
+template &lt;class T&gt;
+void push_chunk(const std::vector&lt;T&gt; &amp;samples,
+                double timestamp = 0.0,
+                bool pushthrough = true);
+template &lt;class T&gt;
+void push_chunk(const std::vector&lt;T&gt; &amp;samples,
+                const std::vector&lt;double&gt; &amp;timestamps,
+                  bool pushthrough = true);
+</code></pre>
+</div>
+<p>
+also available as push_chunk for pushing chunks of data.
+</p>
+</section>
+</section>
+<section>
+<section id="slide-org83a3dff" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org83a3dff"><span class="section-number-3">5.3.</span> Stream Inlet - pulling samples</h3>
+<p>
+<b><b>Stream Inlet</b></b>
+  receiving time series data from a single stream outlet
+</p>
+
+<p>
+<b><b>Resolver</b></b>
+  resolve streams in the lab network based on queries on metadata
+  (name, content type,id etc.)
+</p>
+
+<div style="display: grid; grid-template-columns: auto auto auto;">
+
+<div class="org-src-container">
+
+<pre   ><code class="c++" >// Look for streams
+std::vector&lt;lsl::stream_info&gt; streamInfo =
+  lsl::resolve_stream("name",  // property (name, type,
+                               // source_id, desc/manufacture
+                      "demo_data", // value the property should have
+                      1, // minimum number of streams
+                      100 //lsl::FOREVER  // timeout
+                      );
+if( streamInfo.size() == 0 ) {
+  std::cerr &lt;&lt; "No streams found. Exiting.\n";
+  return -1;
+ }
+
+// Create an inlet to receive data
+lsl::stream_inlet streamInlet(streamInfo[0]);
+</code></pre>
+</div>
+
+<div>
+
+<div class="org-src-container">
+
+<pre   ><code class="python" >streams = resolve_byprop('name', 'VsCommands', timeout=2)
+if len(streams) ==0:
+    continue
+inlet = StreamInlet(streams[0])
+</code></pre>
+</div>
+
+</div>
+</div>
+
+</section>
+<section id="slide-org83a3dff-split" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+
+<p>
+<span class="underline"><span class="underline">Pull Samples</span></span>
+</p>
+
+<div style="display: grid; grid-template-columns: auto auto auto;">
+
+<div class="org-src-container">
+
+<pre   ><code class="c++" >// Buffer to hold the received sample data
+std::vector&lt;double&gt; sample(channelCount);
+double timestamp;
+while (true) {
+  // Pull a sample from the inlet
+  timestamp = streamInlet.pull_sample(sample);
+  offset = inlet.time_correction()
+  // .. do something with it
+}
+</code></pre>
+</div>
+
+<div>
+
+<div class="org-src-container">
+
+<pre   ><code class="python" >command, timestamp = inlet.pull_sample(2) # 2s timeout 
+offset = inlet.time_correction()
+timestamp += offset
+</code></pre>
+</div>
+
+</div>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-orgb822213" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="orgb822213"><span class="section-number-3">5.4.</span> Demo</h3>
+<ul>
+<li>lsl_ostream - stream samples to demo_data stream (random data and saw tooth signal)</li>
+<li>lsl_istream - pull data from demo_data stream</li>
+<li>lsl_pipe - pull data from demo_data stream and streams their avg value to other stream</li>
+<li>lsl_marker - pushing markers/ events to a stream</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org345a4c1" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h3 id="org345a4c1"><span class="section-number-3">5.5.</span> xdf - recording data</h3>
+<ul>
+<li>open file format xdf - Extensible Data Format
+<a href="https://github.com/sccn/xdf/wiki/Specifications">https://github.com/sccn/xdf/wiki/Specifications</a></li>
+<li>open source recording software - Labstream Recorder</li>
+<li>interfaces for python, C++</li>
+<li>MATLAB import supported</li>
+<li>R probably not supported</li>
+
+</ul>
+</section>
+</section>
+<section>
+<section id="slide-org3f6eb30" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h4 id="org3f6eb30"><span class="section-number-4">5.5.1.</span> Labstream Recorder</h4>
+
+<div id="org28283c5" class="figure">
+<p><img src="./labrecorder-default.png" alt="labrecorder-default.png" />
+</p>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-org8ea444c" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h4 id="org8ea444c"><span class="section-number-4">5.5.2.</span> pyXDF</h4>
+<p>
+pyXDF is a Python importer for XDF files.
+</p>
+
+<div class="org-src-container">
+
+<pre   ><code class="python" >import matplotlib.pyplot as plt
+import numpy as np
+
+import pyxdf
+
+data, header = pyxdf.load_xdf("test.xdf")
+
+for stream in data:
+    y = stream["time_series"]
+
+    if isinstance(y, list):
+        # list of strings, draw one vertical line for each marker
+        for timestamp, marker in zip(stream["time_stamps"], y):
+            plt.axvline(x=timestamp)
+            print(f'Marker "{marker[0]}" @ {timestamp:.2f}s')
+    elif isinstance(y, np.ndarray):
+        # numeric data, draw as lines
+        plt.plot(stream["time_stamps"], y)
+    else:
+        raise RuntimeError("Unknown stream format")
+
+plt.show()
+
+</code></pre>
+</div>
+
+</section>
+<section id="slide-org8ea444c-split" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+
+<p>
+Other functions
+</p>
+<ol class="org-ol">
+<li><a id="org0103e00"></a>Replay content of an xdf file with actual timestamps<br />
+<div class="org-src-container">
+
+<pre   ><code class="python" >python -m pyxdf.cli.playback_lsl /path/to/my.xdf --loop
+</code></pre>
+</div>
+</li>
+<li><a id="orgb81b3bb"></a>Show metadata<br />
+<div class="org-src-container">
+
+<pre   ><code class="python" >python -m pyxdf.cli.print_metadata -f=/path/to/my.xdf
+</code></pre>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section>
+<section id="slide-org728f709" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h4 id="org728f709"><span class="section-number-4">5.5.3.</span> libxdf</h4>
+<ul>
+<li>focus is different, as it was made for a signal viewer
+(resampling, adding markers)</li>
+
+</ul>
+
+<div class="org-src-container">
+
+<pre   ><code class="c++" >  #include "xdf.h"
+
+int main(int argc,char* argv[]) { 
+  Xdf xdf_data;
+  xdf_data.load_xdf("test.xdf");
+
+  for (auto stream: xdf_data.streams) {
+    for (size_t i=0; i &lt; stream.time_stamps.size();i++) {
+      std::cout &lt;&lt; stream.time_stamps[i];
+      for (auto channel: stream.time_series[i]) {
+        std::cout &lt;&lt; ';' &lt;&lt; channel;
+      } 
+      std::cout &lt;&lt; std::endl;
+    }
+  }
+</code></pre>
+</div>
+</section>
+</section>
+<section>
+<section id="slide-orgb3754c7" data-background="./crowlogo_main_color.svg" data-background-size="10%" data-background-position="97% 3%">
+<h2 id="orgb3754c7"><span class="section-number-2">6.</span> Questions</h2>
+<p>
+Thank you for your time.
+</p>
+
+<ul>
+<li>repo + website TBD</li>
+<li><a href="mailto:frank.landgraf@uni-muenster.de">mailto:frank.landgraf@uni-muenster.de</a></li>
+
+</ul>
+</section>
+</section>
+</div>
+</div>
+<script src="reveal.js-5.1.0/dist/reveal.js"></script>
+<script src="reveal.js-5.1.0/plugin/highlight/highlight.js"></script>
+
+
+<script>
+// Full list of configuration options available here:
+// https://github.com/hakimel/reveal.js#configuration
+Reveal.initialize({
+plugins: [RevealHighlight],
+transition: "convex"
+});
+
+</script>
+</body>
+</html>

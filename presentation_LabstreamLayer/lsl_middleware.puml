@@ -1,0 +1,36 @@
+@startuml
+
+title LabStreamLayer as Middleware
+
+
+actor signal_1
+
+actor signal_n
+
+component app_1
+component app_n
+
+
+
+signal_1-->app_1
+signal_n-->app_n
+component lsl as "LabstreamLayer" {
+portout signal_1_outlet
+portout signal_n_outlet
+
+}
+
+app_1-->lsl
+app_n-->lsl
+
+component recorder as "LabstreamRecorder (xdf)"
+database xdf
+signal_1_outlet-->recorder
+signal_n_outlet-->recorder
+
+recorder-->xdf
+
+@enduml
+
+
+

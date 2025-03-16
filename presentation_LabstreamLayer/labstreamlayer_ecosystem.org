@@ -1,0 +1,431 @@
+#                  -*- mode: org -*-
+#+TITLE: Collecting time-synchronized measurements - the LabstreamLayer ecosystem
+#+AUTHOR: Frank Landgraf
+#+EMAIL: frank.landgraf@web.de 
+#+OPTIONS: ^:{} toc:nil
+#+REVEAL_ROOT: reveal.js-5.1.0
+#+REVEAL_THEME: solarized
+#+REVEAL_HLEVEL: 3
+#+REVEAL_INIT_OPTIONS: transition: "convex"
+#+REVEAL_PLUGINS: (highlight)
+#+REVEAL_DEFAULT_SLIDE_BACKGROUND: ./crowlogo_main_color.svg
+#+REVEAL_DEFAULT_SLIDE_BACKGROUND_SIZE: 10%
+#+REVEAL_DEFAULT_SLIDE_BACKGROUND_POSITION: 97% 3%
+#+REVEAL_DEFAULT_SLIDE_BACKGROUND_TRANS: slide
+#+REVEAL_EXTRA_CSS: custom.css
+
+* Table of Contents
+  - [[whoami][whoami]]
+  - [[What are we doing at the university][What are we doing at the university]]
+  - [[Labstreaming layer][Labstreaming layer]]
+  - [[Dive into the API][Dive into the API]]
+  - [[Demo][Demo]]
+  - [[xdf - recording data][xdf - recording data]]
+  - [[Questions][Questions]]
+        
+* whoami
+
+Frank Landgraf
+
+- 20 years freelancing
+  mostly embedded systems software development
+- four years ago I was one of the co-founders of https://wtf.coop
+- currently working for the university of Münster as system engineer 
+  at the Department for Neuromotorics and Training 
+
+* What are we doing at the university
+
+- main project: Evaluation of tactile feedback against "Freeze of Gait"
+  caused by Parkinsons Desease
+
+First Results:
+Synchronization of Neurophysiological and Biomechanical Data
+in a Real-Time Virtual Gait Analysis System (GRAIL): A Proof-of-Principle Study
+https://www.mdpi.com/1424-8220/24/12/3779
+
+** Synchronisation of EEG and fNIRS Data
+
+- EEG - electro encephalograpy
+- fNIRS - functional near infrared spectroscopy   
+#+ATTR_HTML: :width 270px
+[[./sensors-24-03779-g003.png]]
+
+- different closed source software for each of them
+- but: LabstreamLayer data streaming supported by both
+  
+** Synchronisation also with stimulus (visual or tactile)  
+
+- unknown delay produced by Virtual Reality System
+[[./sensors-24-03779-g001.webp]]
+- measured by a photo diode and a projected small or white cube
+  
+** Problems
+
+- measurements run on different systems 
+- they store in proprietary formats
+- how to get the additional signal for photo diode in a synchronous way?
+- how do we get the state of the tactile signal (small vibration motor)
+  synchronous
+     
+** Solution
+
+[[./ps_system_overview_w_socks.png]]
+
+** Layered Architecture - the labstream layer
+#+ATTR_HTML: :width 25% :height 25%
+[[./lsl_middleware.png]]
+
+* Labstreaming layer
+
+LSL is an open-source networked middleware ecosystem to stream,
+receive, synchronize, and record neural, physiological,
+and behavioral data streams acquired from diverse sensor hardware.
+
+https://labstreaminglayer.org/
+https://labstreaminglayer.readthedocs.io/
+https://labstreaminglayer.readthedocs.io/info/supported_devices.html
+
+** When to use
+
+- Fusion of Sensor data from different devices
+- mobile devices - stream data over wireless network
+  or from BLE devices
+- if you need an easily extendable, modular integration layer \\
+  for diverse sensor data 
+- measurement of biosignals and behaviour in \\
+  VR environments (->Unity Integration)
+- when different languages are used for data aquisition \\
+  language bindings: C/C++, python, C#, Java, Android, Unity, rust
+
+** Serialisation and Networking
+
+- all serialisation is done by the middleware
+- publisher subscriber mechanism possible through multicast
+
+UDP broadcasts to port 16571 and/or
+UDP multicast to port 16571 at
+224.0.0.1, 224.0.0.183, 239.255.172.215
+TCP and UDP connections to the ports 16572-16604
+
+** Time-Synchronisation
+
+- works similar to NTP or PTP but store the raw timestamps from the source
+  and measured clock offsets
+
+https://labstreaminglayer.readthedocs.io/info/time_synchronization.html
+
+** Main  Repos
+
+__Core Library__
+
+https://github.com/sccn/liblsl
+
+__Collection of Core Library, language bindings and applications as submodules__
+
+https://github.com/sccn/labstreaminglayer
+
+* Dive into the API
+
+C++ (liblsl) vs Python(pylsl + liblsl)
+
+** Terms and Definitions
+
+**Sample**
+  single measurement from all channels of a device
+
+**Chunk**
+  a sample can be transferred alone or for better latency
+  in chunks of multiple samples
+
+#+REVEAL: split
+
+**Stream**
+  sampled data (timestamp and samples channel values) + metadata
+  - name
+  - content_type: numeric or string - all channels have to be of the same type 
+  - sampling rate: regular (i.e. 44100 Hz for Audio/ irregular)
+  - channel data type (double,f float, integral, string)
+  - unique id
+    
+** Stream Outlet - pushing measurement data
+
+**Stream Outlet**
+  make streams available to the network
+
+#+REVEAL: split
+
+__Stream Header and Outlet__
+
+#+REVEAL_HTML: <div style="display: grid; grid-template-columns: auto auto auto;">
+
+#+begin_src c++
+
+  // make a new stream_info (100 Hz)
+  lsl::stream_info info(name,
+  		      type,
+  		      n_channels,
+  		      samplingrate,
+  		      lsl::cf_float32,
+  		      std::string(name) += type);
+
+  // add some description fields
+  info.desc().append_child_value("manufacturer", "LSL");
+  lsl::xml_element chns = info.desc().append_child("channels");
+  for (int k = 0; k < n_channels; k++)
+    chns.append_child("channel")
+      .append_child_value("label",
+  			k < 2
+  			? channels[k]
+  			: "Chan-" + std::to_string(k + 1))
+      .append_child_value("unit", "microvolts")
+      .append_child_value("type", type);
+  // make stream outlet
+  lsl::stream_outlet outlet(info, 0, max_buffered);
+#+end_src
+
+#+REVEAL_HTML: <div>
+  
+#+begin_src python
+  hrv_stream = StreamInfo("Heart Rate variability", #name
+                               "", # content type
+                               4 , # four channels 
+                               75.0, #sample rate
+                               cf_int32, # channel data type
+                               'healthypi_heart_rate_variability' #id
+                          )
+  stream_add_channel_metadata(hrv_stream,['meanval',
+                                          'sdnn',
+                                          'pnn',
+                                          'rmsd'
+                                          ],unit='digits?', type='TBD value')
+  hrv_stream_outlet  = StreamOutlet(hrv_stream, 32, 360)
+
+#+end_src
+
+#+REVEAL_HTML: </div>
+#+REVEAL_HTML: </div>
+
+#+REVEAL: split
+
+__Push Samples__
+
+#+REVEAL_HTML: <div style="display: grid; grid-template-columns: auto auto auto;">
+
+#+begin_src c++
+
+    // variable for the data sample
+    float sample[1]={};
+
+    // ...
+    while(...) {
+      // write modified sample values i.e.
+      sample[0] = (float)((rand() % 1500) / 500.0 - 1.5);
+      // wait (alternatively everything exept wait
+      // could be in a timer handler)
+      std::this_thread::sleep_until(next_sample_time);
+      // send the sample
+      outlet.push_sample(sample);
+    }
+#+end_src
+
+#+REVEAL_HTML: <div>
+  
+#+begin_src python
+    # called in a callback or in a loop
+    hrv_stream_outlet.push_sample([meanval, sdnn, pnn, rmsd],
+                                  timestamp)
+#+end_src
+
+#+REVEAL_HTML: </div>
+#+REVEAL_HTML: </div>
+
+#+REVEAL: split
+
+#+begin_src c++
+  template <class T, int32_t N>
+  void push_sample(const T data[N],
+      		   double timestamp = 0.0,
+      		   bool pushthrough = true);
+
+  template <class T>
+  void push_sample(const std::vector<T> &data,
+    		   double timestamp = 0.0,
+      		   bool pushthrough = true);
+  template <class T>
+  void push_chunk(const std::vector<T> &samples,
+  		double timestamp = 0.0,
+  		bool pushthrough = true);
+  template <class T>
+  void push_chunk(const std::vector<T> &samples,
+  		const std::vector<double> &timestamps,
+    		  bool pushthrough = true);
+#+end_src
+
+also available as push_chunk for pushing chunks of data.
+
+** Stream Inlet - pulling samples
+
+**Stream Inlet**
+  receiving time series data from a single stream outlet
+
+**Resolver**
+  resolve streams in the lab network based on queries on metadata
+  (name, content type,id etc.)
+
+#+REVEAL_HTML: <div style="display: grid; grid-template-columns: auto auto auto;">
+
+#+begin_src c++
+  // Look for streams
+  std::vector<lsl::stream_info> streamInfo =
+    lsl::resolve_stream("name",  // property (name, type,
+  		               // source_id, desc/manufacture
+  		      "demo_data", // value the property should have
+  		      1, // minimum number of streams
+  		      100 //lsl::FOREVER  // timeout
+  		      );
+  if( streamInfo.size() == 0 ) {
+    std::cerr << "No streams found. Exiting.\n";
+    return -1;
+   }
+
+  // Create an inlet to receive data
+  lsl::stream_inlet streamInlet(streamInfo[0]);
+#+end_src
+
+#+REVEAL_HTML: <div>
+  
+#+begin_src python
+  streams = resolve_byprop('name', 'VsCommands', timeout=2)
+  if len(streams) ==0:
+      continue
+  inlet = StreamInlet(streams[0])
+#+end_src
+
+#+REVEAL_HTML: </div>
+#+REVEAL_HTML: </div>
+
+#+REVEAL: split
+
+__Pull Samples__
+
+#+REVEAL_HTML: <div style="display: grid; grid-template-columns: auto auto auto;">
+
+#+begin_src c++
+  // Buffer to hold the received sample data
+  std::vector<double> sample(channelCount);
+  double timestamp;
+  while (true) {
+    // Pull a sample from the inlet
+    timestamp = streamInlet.pull_sample(sample);
+    offset = inlet.time_correction()
+    // .. do something with it
+  }
+#+end_src
+
+#+REVEAL_HTML: <div>
+  
+#+begin_src python
+  command, timestamp = inlet.pull_sample(2) # 2s timeout 
+  offset = inlet.time_correction()
+  timestamp += offset
+#+end_src
+
+#+REVEAL_HTML: </div>
+#+REVEAL_HTML: </div>
+
+** Demo 
+
+- lsl_ostream - stream samples to demo_data stream (random data and saw tooth signal)
+- lsl_istream - pull data from demo_data stream  
+- lsl_pipe - pull data from demo_data stream and streams their avg value to other stream
+- lsl_marker - pushing markers/ events to a stream
+    
+** xdf - recording data
+
+- open file format xdf - Extensible Data Format
+  https://github.com/sccn/xdf/wiki/Specifications
+- open source recording software - Labstream Recorder
+- interfaces for python, C++ 
+- MATLAB import supported
+- R probably not supported  
+
+*** Labstream Recorder
+
+[[./labrecorder-default.png]]
+
+*** pyXDF
+
+pyXDF is a Python importer for XDF files.
+
+#+begin_src python
+import matplotlib.pyplot as plt
+import numpy as np
+
+import pyxdf
+
+data, header = pyxdf.load_xdf("test.xdf")
+
+for stream in data:
+    y = stream["time_series"]
+
+    if isinstance(y, list):
+        # list of strings, draw one vertical line for each marker
+        for timestamp, marker in zip(stream["time_stamps"], y):
+            plt.axvline(x=timestamp)
+            print(f'Marker "{marker[0]}" @ {timestamp:.2f}s')
+    elif isinstance(y, np.ndarray):
+        # numeric data, draw as lines
+        plt.plot(stream["time_stamps"], y)
+    else:
+        raise RuntimeError("Unknown stream format")
+
+plt.show()
+
+#+end_src
+
+#+REVEAL: split
+
+Other functions
+
+**** Replay content of an xdf file with actual timestamps
+
+#+begin_src python
+python -m pyxdf.cli.playback_lsl /path/to/my.xdf --loop
+#+end_src
+
+**** Show metadata
+
+#+begin_src python
+python -m pyxdf.cli.print_metadata -f=/path/to/my.xdf
+#+end_src
+
+*** libxdf
+
+- focus is different, as it was made for a signal viewer
+  (resampling, adding markers)
+
+#+begin_src c++
+  #include "xdf.h"
+
+int main(int argc,char* argv[]) { 
+  Xdf xdf_data;
+  xdf_data.load_xdf("test.xdf");
+
+  for (auto stream: xdf_data.streams) {
+    for (size_t i=0; i < stream.time_stamps.size();i++) {
+      std::cout << stream.time_stamps[i];
+      for (auto channel: stream.time_series[i]) {
+        std::cout << ';' << channel;
+      } 
+      std::cout << std::endl;
+    }
+  }
+#+end_src
+
+* Questions
+
+Thank you for your time.
+
+- repo + website TBD
+- mailto:frank.landgraf@uni-muenster.de
+
